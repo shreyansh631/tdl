@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List - View</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .list {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        .list-item {
+            margin: 10px 0;
+        }
+
+        .sublist {
+            margin-left: 20px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>View To-Do List</h1>
+        <ul id="list" class="list"></ul>
+        <button onclick="window.location.href='index.html'">Go to Edit Page</button>
+    </div>
+
+    <script>
+        function createListItem(item) {
+            const li = document.createElement('li');
+            li.className = 'list-item';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = item.completed;
+            checkbox.onchange = () => {
+                item.completed = checkbox.checked;
+                saveList();
+            };
+            li.appendChild(checkbox);
+
+            const span = document.createElement('span');
+            span.textContent = item.text;
+            li.appendChild(span);
+
+            const sublist = document.createElement('ul');
+            sublist.className = 'sublist';
+            li.appendChild(sublist);
+
+            item.children.forEach(child => {
+                sublist.appendChild(createListItem(child));
+            });
+
+            return li;
+        }
+
+        function loadList() {
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+
+            const savedList = localStorage.getItem('nestedTodoList');
+            if (savedList) {
+                const items = JSON.parse(savedList);
+                items.forEach(item => {
+                    list.appendChild(createListItem(item));
+                });
+            }
+        }
+
+        function saveList() {
+            const list = document.getElementById('list');
+
+            function serializeList(ul) {
+                return Array.from(ul.children).map(li => {
+                    const checkbox = li.querySelector('input[type="checkbox"]');
+                    const text = li.querySelector('span').textContent;
+                    const sublist = li.querySelector('ul');
+                    return {
+                        text,
+                        completed: checkbox.checked,
+                        children: serializeList(sublist)
+                    };
+                });
+            }
+
+            const serializedList = serializeList(list);
+            localStorage.setItem('nestedTodoList', JSON.stringify(serializedList));
+        }
+
+        window.onload = loadList;
+    </script>
+</body>
+</html>

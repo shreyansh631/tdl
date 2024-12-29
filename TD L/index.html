@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List - Edit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .list {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        .list-item {
+            margin: 10px 0;
+        }
+
+        .sublist {
+            margin-left: 20px;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 30px);
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .sublist-button {
+            font-size: 0.8rem;
+            margin-left: 5px;
+            background-color: #28a745;
+        }
+
+        .sublist-button:hover {
+            background-color: #1e7e34;
+        }
+
+        .remove-button {
+            background-color: #dc3545;
+        }
+
+        .remove-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit To-Do List</h1>
+        <input type="text" id="newItem" placeholder="Add a new item">
+        <button onclick="addItem()">Add Item</button>
+        <ul id="list" class="list"></ul>
+        <button onclick="saveList()">Save List</button>
+        <button onclick="window.location.href='view.html'">Go to View Page</button>
+    </div>
+
+    <script>
+        function createListItem(text) {
+            const li = document.createElement('li');
+            li.className = 'list-item';
+
+            const span = document.createElement('span');
+            span.textContent = text;
+            li.appendChild(span);
+
+            const sublist = document.createElement('ul');
+            sublist.className = 'sublist';
+            li.appendChild(sublist);
+
+            const sublistInput = document.createElement('input');
+            sublistInput.type = 'text';
+            sublistInput.placeholder = 'Add a sub-item';
+            li.appendChild(sublistInput);
+
+            const addSublistButton = document.createElement('button');
+            addSublistButton.textContent = 'Add Sub-Item';
+            addSublistButton.className = 'sublist-button';
+            addSublistButton.onclick = () => {
+                if (sublistInput.value.trim() !== '') {
+                    const subItem = createListItem(sublistInput.value.trim());
+                    sublist.appendChild(subItem);
+                    sublistInput.value = '';
+                }
+            };
+            li.appendChild(addSublistButton);
+
+            const removeButton = document.createElement('button');
+            removeButton.textContent = 'Remove';
+            removeButton.className = 'remove-button';
+            removeButton.onclick = () => {
+                li.remove();
+            };
+            li.appendChild(removeButton);
+
+            return li;
+        }
+
+        function addItem() {
+            const newItemInput = document.getElementById('newItem');
+            if (newItemInput.value.trim() !== '') {
+                const list = document.getElementById('list');
+                const listItem = createListItem(newItemInput.value.trim());
+                list.appendChild(listItem);
+                newItemInput.value = '';
+            }
+        }
+
+        function saveList() {
+            const list = document.getElementById('list');
+
+            function serializeList(ul) {
+                return Array.from(ul.children).map(li => {
+                    const text = li.querySelector('span').textContent;
+                    const sublist = li.querySelector('ul');
+                    return { text, children: serializeList(sublist) };
+                });
+            }
+
+            const serializedList = serializeList(list);
+            localStorage.setItem('nestedTodoList', JSON.stringify(serializedList));
+            alert('List saved!');
+        }
+
+        function loadList() {
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+
+            function deserializeList(items, ul) {
+                items.forEach(item => {
+                    const li = createListItem(item.text);
+                    ul.appendChild(li);
+                    deserializeList(item.children, li.querySelector('ul'));
+                });
+            }
+
+            const savedList = localStorage.getItem('nestedTodoList');
+            if (savedList) {
+                const items = JSON.parse(savedList);
+                deserializeList(items, list);
+            }
+        }
+
+        window.onload = loadList;
+    </script>
+</body>
+</html>
